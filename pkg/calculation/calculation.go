@@ -174,7 +174,6 @@ func multiplyAndDivision(exp_slice []string) ([]string, error) { //умноже�
 	for i < len(exp_slice) {
 		el := exp_slice[i]
 		if el[0] == '*' {
-			//fmt.Println("el:", el)
 			el1_float, _ := strconv.ParseFloat(el[1:], 64)
 			el2_float, _ := strconv.ParseFloat(exp_slice[i-1], 64)
 			tres = el1_float * el2_float
@@ -184,9 +183,7 @@ func multiplyAndDivision(exp_slice []string) ([]string, error) { //умноже�
 			} else {
 				exp_slice = append(exp_slice[:i], exp_slice[i+1:]...)
 			}
-			//fmt.Println("i:", i, "\nel1:", el1_float, "\nel2:", el2_float, "\ntres:", tres, "\nexp_slice:", exp_slice, "\n---------")
 		} else if el[0] == '/' {
-			//fmt.Println("el:", el)
 			el1_float, _ := strconv.ParseFloat(el[1:], 64)
 			if el1_float == 0 {
 				return nil, divisionByZero
@@ -199,7 +196,6 @@ func multiplyAndDivision(exp_slice []string) ([]string, error) { //умноже�
 			} else {
 				exp_slice = append(exp_slice[:i], exp_slice[i+1:]...)
 			}
-			//fmt.Println("i:", i, "\nel1:", el1_float, "\nel2:", el2_float, "\ntres:", tres, "\nexp_slice:", exp_slice, "\n---------")
 		} else {
 			i++
 		}
