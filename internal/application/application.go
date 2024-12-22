@@ -1,25 +1,42 @@
 package application
 
 import (
-	"bufio"
-	"log"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
 	"os"
-	"strings"
 
 	"github.com/ArtemiySps/calc_go/pkg/calculation"
 )
 
+type Config struct {
+	Addr string
+}
+
+func ConfigFromEnv() *Config {
+	config := new(Config)
+	config.Addr = os.Getenv("PORT")
+	if config.Addr == "" {
+		config.Addr = "8080"
+	}
+	return config
+}
+
 type Application struct {
+	config *Config
 }
 
 func New() *Application {
-	return &Application{}
+	return &Application{
+		config: ConfigFromEnv(),
+	}
 }
 
 // Функция запуска приложения
 // тут будем читать введенную строку и после нажатия ENTER писать результат работы программы на экране
 // если пользователь ввел exit - то останаваливаем приложение
-func (a *Application) Run() error {
+/*func (a *Application) Run() error {
 	for {
 		// читаем выражение для вычисления из командной строки
 		log.Println("input expression")
@@ -38,9 +55,40 @@ func (a *Application) Run() error {
 		//вычисляем выражение
 		result, err := calculation.Calc(text)
 		if err != nil {
-			log.Println(text, " calculation failed wit error: ", err)
+			log.Println(text, " calculation failed with error: ", err)
 		} else {
 			log.Println(text, "=", result)
 		}
 	}
+}*/
+
+type Request struct {
+	Expression string `json:"expression"`
+}
+
+func CalcHandler(w http.ResponseWriter, r *http.Request) {
+	request := new(Request)
+	defer r.Body.Close()
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		fmt.Fprint(w, err.Error(), http.StatusBadRequest)
+	}
+
+	result, err := calculation.Calc(request.Expression)
+	if err != nil {
+		if errors.Is(err, calculation.ErrServerError) {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(w, "ERROR: ", err.Error(), "\n", http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, err.Error(), "\n", http.StatusUnprocessableEntity)
+		}
+	} else {
+		fmt.Fprintf(w, "result: %f", result)
+	}
+}
+
+func (a *Application) RunServer() error {
+	http.HandleFunc("/", CalcHandler)
+	return http.ListenAndServe(":"+a.config.Addr, nil)
 }
