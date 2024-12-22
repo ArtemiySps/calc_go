@@ -22,7 +22,7 @@
 
 ## Общая структура файлов
 
-![[Pasted image 20241222122821.png]]
+![](readme_assets/file_structure.png)
 
 ## Логика калькулятора
 
