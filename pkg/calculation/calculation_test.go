@@ -57,7 +57,7 @@ func TestCalc(t *testing.T) {
 		},
 		{
 			name:        "two operations in a row",
-			expression:  "3+5",
+			expression:  "3++5",
 			expectedErr: ErrTwoOperationsInARow,
 		},
 		{
@@ -72,7 +72,7 @@ func TestCalc(t *testing.T) {
 		},
 		{
 			name:        "no numbers",
-			expression:  "* + ()",
+			expression:  "",
 			expectedErr: ErrNoNumbers,
 		},
 	}

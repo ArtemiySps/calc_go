@@ -1,6 +1,7 @@
 package application
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,7 +17,11 @@ type Config struct {
 
 func ConfigFromEnv() *Config {
 	config := new(Config)
-	config.Addr = os.Getenv("PORT")
+	if len(os.Args) < 2 {
+		config.Addr = "8080"
+	} else {
+		config.Addr = os.Args[1]
+	}
 	if config.Addr == "" {
 		config.Addr = "8080"
 	}
@@ -33,43 +38,21 @@ func New() *Application {
 	}
 }
 
-// Функция запуска приложения
-// тут будем читать введенную строку и после нажатия ENTER писать результат работы программы на экране
-// если пользователь ввел exit - то останаваливаем приложение
-/*func (a *Application) Run() error {
-	for {
-		// читаем выражение для вычисления из командной строки
-		log.Println("input expression")
-		reader := bufio.NewReader(os.Stdin)
-		text, err := reader.ReadString('\n')
-		if err != nil {
-			log.Println("failed to read expression from console")
-		}
-		// убираем пробелы, чтобы оставить только вычислемое выражение
-		text = strings.TrimSpace(text)
-		// выходим, если ввели команду "exit"
-		if text == "exit" {
-			log.Println("aplication was successfully closed")
-			return nil
-		}
-		//вычисляем выражение
-		result, err := calculation.Calc(text)
-		if err != nil {
-			log.Println(text, " calculation failed with error: ", err)
-		} else {
-			log.Println(text, "=", result)
-		}
-	}
-}*/
-
 type Request struct {
 	Expression string `json:"expression"`
 }
 
+type Answer struct {
+	Result float64 `json:"result"`
+}
+
 func CalcHandler(w http.ResponseWriter, r *http.Request) {
 	request := new(Request)
+
 	defer r.Body.Close()
-	err := json.NewDecoder(r.Body).Decode(&request)
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&request)
 	if err != nil {
 		fmt.Fprint(w, err.Error(), http.StatusBadRequest)
 		return
@@ -79,13 +62,20 @@ func CalcHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, calculation.ErrServerError) {
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(w, "ERROR: ", err.Error(), "\n", http.StatusInternalServerError)
+			fmt.Fprint(w, "ERROR: ", err.Error(), "\nStatusCode: ", http.StatusInternalServerError)
 		} else {
 			w.WriteHeader(http.StatusUnprocessableEntity)
-			fmt.Fprint(w, err.Error(), "\n", http.StatusUnprocessableEntity)
+			fmt.Fprint(w, err.Error(), "\nStatusCode: ", http.StatusUnprocessableEntity)
 		}
 	} else {
-		fmt.Fprintf(w, "result: %f", result)
+		ans := Answer{Result: result}
+		var buf bytes.Buffer
+		encoder := json.NewEncoder(&buf)
+		err := encoder.Encode(ans)
+		if err != nil {
+			fmt.Fprint(w, err.Error(), "\n", http.StatusInternalServerError)
+		}
+		fmt.Fprint(w, buf.String())
 	}
 }
 
