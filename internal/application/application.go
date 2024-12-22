@@ -81,7 +81,7 @@ func CalcHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, "ERROR: ", err.Error(), "\n", http.StatusInternalServerError)
 		} else {
 			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprint(w, err.Error(), "\n", http.StatusBadRequest)
+			fmt.Fprint(w, err.Error(), "\n", http.StatusUnprocessableEntity)
 		}
 	} else {
 		fmt.Fprintf(w, "result: %f", result)
