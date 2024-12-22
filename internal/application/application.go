@@ -1,13 +1,11 @@
 package application
 
 import (
-	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/ArtemiySps/calc_go/pkg/calculation"
 )
@@ -38,7 +36,7 @@ func New() *Application {
 // Функция запуска приложения
 // тут будем читать введенную строку и после нажатия ENTER писать результат работы программы на экране
 // если пользователь ввел exit - то останаваливаем приложение
-func (a *Application) Run() error {
+/*func (a *Application) Run() error {
 	for {
 		// читаем выражение для вычисления из командной строки
 		log.Println("input expression")
@@ -57,12 +55,12 @@ func (a *Application) Run() error {
 		//вычисляем выражение
 		result, err := calculation.Calc(text)
 		if err != nil {
-			log.Println(text, " calculation failed wit error: ", err)
+			log.Println(text, " calculation failed with error: ", err)
 		} else {
 			log.Println(text, "=", result)
 		}
 	}
-}
+}*/
 
 type Request struct {
 	Expression string `json:"expression"`
@@ -78,7 +76,13 @@ func CalcHandler(w http.ResponseWriter, r *http.Request) {
 
 	result, err := calculation.Calc(request.Expression)
 	if err != nil {
-		fmt.Fprint(w, "error: ", err.Error()) // здесь должны быть нормальные ошибки
+		if errors.Is(err, calculation.ErrServerError) {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(w, "ERROR: ", err.Error(), "\n", http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, err.Error(), "\n", http.StatusBadRequest)
+		}
 	} else {
 		fmt.Fprintf(w, "result: %f", result)
 	}

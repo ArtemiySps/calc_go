@@ -1,19 +1,8 @@
 package calculation
 
 import (
-	"errors"
-	"fmt"
 	"slices"
 	"strconv"
-)
-
-var (
-	divisionByZero      = errors.New("division by zero")
-	unexpectedSymbol    = errors.New("unexpected symbol")
-	twoOperationsInARow = errors.New("two operations in a row")
-	operationAtTheEnd   = errors.New("operation at the end")
-	bracketsProblem     = errors.New("the number of open and closed brackets is different")
-	noNumbers           = errors.New("no numbers in expresion")
 )
 
 var (
@@ -32,13 +21,13 @@ func checkString(expression string) error {
 		}
 	}
 	if !numbers_marker {
-		return noNumbers
+		return ErrNoNumbers
 	}
 
 	//проверка "цифра или символ или скобка"
 	for _, el := range expression {
 		if !slices.Contains(numbers, el) && !slices.Contains(symbols, el) && !slices.Contains(brackets, el) {
-			return unexpectedSymbol
+			return ErrUnexpectedSymbol
 		}
 	}
 
@@ -46,10 +35,10 @@ func checkString(expression string) error {
 	for i, el := range expression {
 		if slices.Contains(symbols, el) && i != len(expression)-1 {
 			if slices.Contains(symbols, rune(expression[i+1])) {
-				return twoOperationsInARow
+				return ErrTwoOperationsInARow
 			}
 		} else if slices.Contains(symbols, el) && i == len(expression)-1 {
-			return operationAtTheEnd
+			return ErrOperationAtTheEnd
 		}
 	}
 
@@ -64,7 +53,7 @@ func checkString(expression string) error {
 		}
 	}
 	if bracket_counter != 0 {
-		return bracketsProblem
+		return ErrBracketsProblem
 	}
 
 	return nil
@@ -142,7 +131,7 @@ func makeSlice(expression string) []string { //разбиваем выражен
 	exp_slice = append(exp_slice, str)
 	start_marker = true
 
-	fmt.Println(exp_slice)
+	//fmt.Println(exp_slice)
 
 	return exp_slice
 }
@@ -151,7 +140,7 @@ func bracketsOperations(exp_slice []string) ([]string, error) { //работа �
 	for i, el := range exp_slice {
 		if el[1] == '(' {
 			el_without_brackets := string(el[2 : len(el)-1])
-			fmt.Println("Brackets off:", el_without_brackets)
+			//fmt.Println("Brackets off:", el_without_brackets)
 			result, err := Calc(el_without_brackets)
 			if err != nil {
 				return nil, err
@@ -163,7 +152,7 @@ func bracketsOperations(exp_slice []string) ([]string, error) { //работа �
 			}
 		}
 	}
-	fmt.Println("Final:", exp_slice)
+	//fmt.Println("Final:", exp_slice)
 	return exp_slice, nil
 }
 
@@ -186,7 +175,7 @@ func multiplyAndDivision(exp_slice []string) ([]string, error) { //умноже�
 		} else if el[0] == '/' {
 			el1_float, _ := strconv.ParseFloat(el[1:], 64)
 			if el1_float == 0 {
-				return nil, divisionByZero
+				return nil, ErrDivisionByZero
 			}
 			el2_float, _ := strconv.ParseFloat(exp_slice[i-1], 64)
 			tres = el2_float / el1_float
@@ -236,10 +225,4 @@ func Calc(expression string) (float64, error) {
 	result := additionAndSubtraction(exp_slice)
 
 	return result, nil
-}
-
-func main() {
-	var exp string = "((4+5)-2)*2"
-
-	fmt.Println(Calc(exp))
 }
