@@ -22,7 +22,7 @@
 
 ## Общая структура файлов
 
-![alt text](https://github.com/ArtemiySps/calc_go/blob/dev/file_structure.png?raw=true)
+![](readme_assets/file_structure.png)
 
 ## Логика калькулятора
 
